@@ -70,7 +70,7 @@ func LParState(l lexer.Lexer) lexer.StateFn {
 	if !l.Accept("(") {
 		return l.Errorf("expected '(' got %q", l.Peek())
 	}
-	l.Ignore()
+	l.Emit(LPar)
 	return IdentState
 }
 
@@ -78,7 +78,7 @@ func RParState(l lexer.Lexer) lexer.StateFn {
 	if !l.Accept(")") {
 		return l.Errorf("expected ')' got %q", string(l.Peek()))
 	}
-	l.Ignore()
+	l.Emit(RPar)
 	r := l.Next()
 	if r == lexer.EOFRune {
 		return nil

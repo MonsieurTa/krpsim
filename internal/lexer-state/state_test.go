@@ -26,10 +26,10 @@ func TestLexer(t *testing.T) {
 		}
 		l := lexer.New("test lexer", string(b), IdentState)
 		results := l.Start()
-		rv := []*lexer.Token{}
+		rv := []lexer.Token{}
 		for {
 			if t, ok := <-results; ok {
-				rv = append(rv, &t)
+				rv = append(rv, t)
 			} else {
 				break
 			}
@@ -38,8 +38,8 @@ func TestLexer(t *testing.T) {
 			t.Error("expected len to be more than 0")
 		}
 		last := rv[len(rv)-1]
-		if last.Type == lexer.ErrorToken {
-			t.Errorf("unexpected error:\n\tat: %d\n\ttype: %s\n\tvalue: %s", last.At, ToString(last.Type), last.Value)
+		if last.Type() == lexer.ErrorToken {
+			t.Errorf("unexpected error:\n\tat: %d\n\ttype: %s\n\tvalue: %s", last.At(), ToString(last.Type()), last.Value())
 		}
 	}
 }

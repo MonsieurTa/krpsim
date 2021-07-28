@@ -7,6 +7,8 @@ const (
 	IdentToken
 	ColonToken
 	SemicolonToken
+	LPar
+	RPar
 	EOF
 )
 
@@ -16,6 +18,8 @@ var TOKENS = []string{
 	IdentToken:       "IdentToken",
 	ColonToken:       "ColonToken",
 	SemicolonToken:   "SemicolonToken",
+	LPar:             "LPar",
+	RPar:             "RPar",
 	EOF:              "EOF",
 }
 
