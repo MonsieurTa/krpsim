@@ -25,11 +25,11 @@ func TestLexer(t *testing.T) {
 			t.Error(err)
 		}
 		l := lexer.New("test lexer", string(b), IdentState)
-		results := l.Start()
+		l.Start()
 		rv := []lexer.Token{}
 		for {
-			if t, ok := <-results; ok {
-				rv = append(rv, t)
+			if token, done := l.NextToken(); !done {
+				rv = append(rv, token)
 			} else {
 				break
 			}
