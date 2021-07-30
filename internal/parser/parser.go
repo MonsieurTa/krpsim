@@ -40,6 +40,10 @@ func (p *parser) parse() error {
 	if err != nil {
 		return err
 	}
+	p.cfg.Optimize, err = p.parseOptimize()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -111,8 +115,13 @@ func (p *parser) parseProcesses() ([]*Process, error) {
 func (p *parser) parseProcess() (*Process, error) {
 	process := p.tokens.PopFront()
 
-	if !process.IsType(lexerstate.IdentToken) {
+	if process == nil {
+		return nil, fmt.Errorf("expected ident token, got %v", process)
+	} else if !process.IsType(lexerstate.IdentToken) {
 		return nil, fmt.Errorf("expected ident token, got %v", lexerstate.ToString(process.Val.Type()))
+	} else if process.Val.Value() == "optimize" {
+		p.tokens.PushFront(process)
+		return nil, nil
 	}
 	p.tokens.IgnoreIf([]lexer.TokenType{lexerstate.ColonToken, lexerstate.LPar})
 
@@ -149,6 +158,29 @@ func (p *parser) parseProcess() (*Process, error) {
 	}, nil
 }
 
-func (p *parser) parseOptimize() {
+func (p *parser) parseOptimize() ([]string, error) {
+	optimize := p.tokens.PopFront()
 
+	if optimize == nil {
+		return nil, fmt.Errorf("expected ident token, got %v", optimize)
+	}
+	if !optimize.IsType(lexerstate.IdentToken) {
+		return nil, fmt.Errorf("expected ident token, got %v", lexerstate.ToString(optimize.Val.Type()))
+	}
+	p.tokens.IgnoreIf([]lexer.TokenType{lexerstate.ColonToken, lexerstate.LPar})
+
+	rv := []string{}
+	t := p.tokens.PopFront()
+	for t != nil && !t.IsType(lexerstate.RPar) {
+		if t.IsType(lexerstate.IdentToken) {
+			rv = append(rv, t.Val.Value())
+		} else if !t.IsType(lexerstate.SemicolonToken) {
+			return nil, fmt.Errorf("unexpected token %s, expected ident token or semicolon token", t.Val.Value())
+		}
+		t = p.tokens.PopFront()
+	}
+	if t == nil {
+		return nil, fmt.Errorf("unexpected EOF, expected ')'")
+	}
+	return rv, nil
 }
