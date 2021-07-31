@@ -8,7 +8,7 @@ type Population struct {
 }
 
 type Config struct {
-	PopulatonSize      int
+	PopulationSize     int
 	GenesPerIndividual int
 	Processes          []*entity.Process
 }
@@ -16,8 +16,8 @@ type Config struct {
 func NewPopulation(cfg *Config) *Population {
 	rv := Population{}
 
-	rv.Individuals = make([]*Individual, cfg.PopulatonSize)
-	for i := 0; i < cfg.PopulatonSize; i++ {
+	rv.Individuals = make([]*Individual, cfg.PopulationSize)
+	for i := 0; i < cfg.PopulationSize; i++ {
 		rv.Individuals[i] = NewRandomIndividual(cfg.GenesPerIndividual, cfg.Processes)
 	}
 	return &rv

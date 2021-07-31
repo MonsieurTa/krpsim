@@ -30,7 +30,7 @@ func TestIkeaPopulation(t *testing.T) {
 	expectedPopulationSize := 40
 	expectedGenesPerIndividual := 40
 	pop := NewPopulation(&Config{
-		PopulatonSize:      expectedPopulationSize,
+		PopulationSize:     expectedPopulationSize,
 		GenesPerIndividual: expectedGenesPerIndividual,
 		Processes:          cfg.Processes,
 	})
