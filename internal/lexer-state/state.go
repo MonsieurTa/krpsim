@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	IDENT = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+	IDENT  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789"
+	DIGITS = "0123456789"
 )
 
 func IdentState(l lexer.Lexer) lexer.StateFn {
@@ -93,11 +94,10 @@ func RParState(l lexer.Lexer) lexer.StateFn {
 }
 
 func NumberState(l lexer.Lexer) lexer.StateFn {
-	digits := "0123456789"
-	if !l.Accept(digits) {
+	if !l.Accept(DIGITS) {
 		return l.Errorf("expected digit got %q", l.Peek())
 	}
-	l.AcceptRun("0123456789")
+	l.AcceptRun(DIGITS)
 	l.Emit(IntToken)
 
 	r := l.Next()
