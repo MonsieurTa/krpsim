@@ -1,10 +1,10 @@
-package genetic
+package store
 
 import "github.com/MonsieurTa/krpsim/internal/entity"
 
 type store map[string]int
 
-func NewStore(cfg *entity.Config) Store {
+func New(cfg *entity.Config) Store {
 	rv := store{}
 	rv.init(cfg)
 	return rv

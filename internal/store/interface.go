@@ -1,4 +1,4 @@
-package genetic
+package store
 
 type Store interface {
 	Duplicate() Store
