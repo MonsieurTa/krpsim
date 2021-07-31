@@ -1,4 +1,4 @@
-package parser
+package entity
 
 type Config struct {
 	Stocks    []*Stock

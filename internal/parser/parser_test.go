@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/MonsieurTa/go-lexer"
+	"github.com/MonsieurTa/krpsim/internal/entity"
 	lexerstate "github.com/MonsieurTa/krpsim/internal/lexer-state"
 )
 
@@ -30,7 +31,7 @@ func TestParser(t *testing.T) {
 
 		p := New(l)
 
-		var cfg Config
+		var cfg entity.Config
 
 		if p.Parse(&cfg) != nil {
 			t.Fatal(err)

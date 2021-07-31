@@ -5,13 +5,14 @@ import (
 	"strconv"
 
 	"github.com/MonsieurTa/go-lexer"
+	"github.com/MonsieurTa/krpsim/internal/entity"
 	lexerstate "github.com/MonsieurTa/krpsim/internal/lexer-state"
 )
 
 type parser struct {
 	r      Reader
 	tokens *Stack
-	cfg    *Config
+	cfg    *entity.Config
 }
 
 func New(r Reader) Parser {
@@ -24,7 +25,7 @@ func New(r Reader) Parser {
 	}
 }
 
-func (p *parser) Parse(cfg *Config) error {
+func (p *parser) Parse(cfg *entity.Config) error {
 	p.cfg = cfg
 	p.pullTokens()
 	return p.parse()
@@ -57,8 +58,8 @@ func (p *parser) pullTokens() {
 	}
 }
 
-func (p *parser) parseStocks() ([]*Stock, error) {
-	rv := []*Stock{}
+func (p *parser) parseStocks() ([]*entity.Stock, error) {
+	rv := []*entity.Stock{}
 	for {
 		s, err := p.parseStock()
 		if err != nil {
@@ -73,7 +74,7 @@ func (p *parser) parseStocks() ([]*Stock, error) {
 	}
 }
 
-func (p *parser) parseStock() (*Stock, error) {
+func (p *parser) parseStock() (*entity.Stock, error) {
 	keyNode := p.tokens.PopFront()
 	sepNode := p.tokens.PopFront()
 	valueNode := p.tokens.PopFront()
@@ -89,7 +90,7 @@ func (p *parser) parseStock() (*Stock, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Stock{keyNode.Val.Value(), v}, nil
+	return &entity.Stock{keyNode.Val.Value(), v}, nil
 }
 
 func isStock(key, sep, value *StackNode) bool {
@@ -98,8 +99,8 @@ func isStock(key, sep, value *StackNode) bool {
 		value.IsType(lexerstate.IntToken)
 }
 
-func (p *parser) parseProcesses() ([]*Process, error) {
-	rv := []*Process{}
+func (p *parser) parseProcesses() ([]*entity.Process, error) {
+	rv := []*entity.Process{}
 	for {
 		s, err := p.parseProcess()
 		if s == nil && err == nil {
@@ -112,7 +113,7 @@ func (p *parser) parseProcesses() ([]*Process, error) {
 	}
 }
 
-func (p *parser) parseProcess() (*Process, error) {
+func (p *parser) parseProcess() (*entity.Process, error) {
 	process := p.tokens.PopFront()
 
 	if process == nil {
@@ -150,7 +151,7 @@ func (p *parser) parseProcess() (*Process, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Process{
+	return &entity.Process{
 		Name:    process.Val.Value(),
 		Needs:   needs,
 		Results: results,
