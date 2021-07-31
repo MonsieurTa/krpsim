@@ -38,8 +38,8 @@ func TestIkeaPopulation(t *testing.T) {
 		t.Fatalf("expected %d population size, got %d", expectedPopulationSize, len(pop.Individuals))
 	}
 	for _, v := range pop.Individuals {
-		if v.Size != expectedGenesPerIndividual {
-			t.Fatalf("expected %d genes, got %d", expectedGenesPerIndividual, v.Size)
+		if v.Genes.Size != expectedGenesPerIndividual {
+			t.Fatalf("expected %d genes, got %d", expectedGenesPerIndividual, v.Genes.Size)
 		}
 	}
 }
