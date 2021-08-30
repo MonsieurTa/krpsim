@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strconv"
 
 	"github.com/MonsieurTa/go-lexer"
@@ -12,40 +13,44 @@ import (
 type parser struct {
 	r      Reader
 	tokens *Stack
-	cfg    *entity.Config
 }
 
-func New(r Reader) Parser {
-	if r == nil {
-		panic("parser: got nil reader")
-	}
+func New() Parser {
 	return &parser{
-		r:      r,
 		tokens: &Stack{},
 	}
 }
 
-func (p *parser) Parse(cfg *entity.Config) error {
-	p.cfg = cfg
+func (p *parser) Parse(filepath string) (*entity.Config, error) {
+	b, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+	l := lexer.New("lexer", string(b), lexerstate.IdentState)
+	p.r = l
+	l.Start()
+
 	p.pullTokens()
 	return p.parse()
 }
 
-func (p *parser) parse() error {
+func (p *parser) parse() (*entity.Config, error) {
+	var cfg entity.Config
 	var err error
-	p.cfg.Stocks, err = p.parseStocks()
+
+	cfg.Stocks, err = p.parseStocks()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	p.cfg.Processes, err = p.parseProcesses()
+	cfg.Processes, err = p.parseProcesses()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	p.cfg.Optimize, err = p.parseOptimize()
+	cfg.OptimizeTime, cfg.Goals, err = p.parseGoals()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &cfg, nil
 }
 
 func (p *parser) pullTokens() {
@@ -58,39 +63,39 @@ func (p *parser) pullTokens() {
 	}
 }
 
-func (p *parser) parseStocks() ([]*entity.Stock, error) {
-	rv := []*entity.Stock{}
+func (p *parser) parseStocks() (map[string]int, error) {
+	rv := map[string]int{}
 	for {
-		s, err := p.parseStock()
+		key, value, err := p.parseStock()
 		if err != nil {
 			return nil, err
 		}
-		if s == nil {
+		if key == "" && value == -1 {
 			return rv, nil
 		}
-		rv = append(rv, s)
+		rv[key] = value
 
 		p.tokens.IgnoreIf([]lexer.TokenType{lexerstate.SemicolonToken})
 	}
 }
 
-func (p *parser) parseStock() (*entity.Stock, error) {
+func (p *parser) parseStock() (key string, value int, err error) {
 	keyNode := p.tokens.PopFront()
 	sepNode := p.tokens.PopFront()
 	valueNode := p.tokens.PopFront()
 
 	if keyNode == nil || sepNode == nil || valueNode == nil {
-		return nil, fmt.Errorf("unexpected nil, keyNode=%v, sepNode=%v, valueNode=%v", keyNode, sepNode, valueNode)
+		return "", -1, fmt.Errorf("unexpected nil, keyNode=%v, sepNode=%v, valueNode=%v", keyNode, sepNode, valueNode)
 	}
 	if !isStock(keyNode, sepNode, valueNode) {
 		p.tokens.BatchPushFront([]*StackNode{keyNode, sepNode, valueNode})
-		return nil, nil
+		return "", -1, nil
 	}
 	v, err := strconv.Atoi(valueNode.Val.Value())
 	if err != nil {
-		return nil, err
+		return "", -1, err
 	}
-	return &entity.Stock{keyNode.Val.Value(), v}, nil
+	return keyNode.Val.Value(), v, nil
 }
 
 func isStock(key, sep, value *StackNode) bool {
@@ -100,16 +105,16 @@ func isStock(key, sep, value *StackNode) bool {
 }
 
 func (p *parser) parseProcesses() ([]*entity.Process, error) {
-	rv := []*entity.Process{}
+	rv := make([]*entity.Process, 0)
 	for {
-		s, err := p.parseProcess()
-		if s == nil && err == nil {
+		process, err := p.parseProcess()
+		if process == nil && err == nil {
 			return rv, nil
 		}
 		if err != nil {
 			return nil, err
 		}
-		rv = append(rv, s)
+		rv = append(rv, process)
 	}
 }
 
@@ -159,29 +164,44 @@ func (p *parser) parseProcess() (*entity.Process, error) {
 	}, nil
 }
 
-func (p *parser) parseOptimize() ([]string, error) {
+func (p *parser) parseGoals() (bool, []string, error) {
 	optimize := p.tokens.PopFront()
 
 	if optimize == nil {
-		return nil, fmt.Errorf("expected ident token, got %v", optimize)
+		return false, nil, fmt.Errorf("expected ident token, got %v", optimize)
 	}
 	if !optimize.IsType(lexerstate.IdentToken) {
-		return nil, fmt.Errorf("expected ident token, got %v", lexerstate.ToString(optimize.Val.Type()))
+		return false, nil, fmt.Errorf("expected ident token, got %v", lexerstate.ToString(optimize.Val.Type()))
 	}
 	p.tokens.IgnoreIf([]lexer.TokenType{lexerstate.ColonToken, lexerstate.LPar})
 
-	rv := []string{}
-	t := p.tokens.PopFront()
+	return getGoalTokens(p.tokens)
+}
+
+func getGoalTokens(tokens *Stack) (bool, []string, error) {
+	memo := map[string]bool{} // avoid duplicates
+
+	t := tokens.PopFront()
 	for t != nil && !t.IsType(lexerstate.RPar) {
 		if t.IsType(lexerstate.IdentToken) {
-			rv = append(rv, t.Val.Value())
+			memo[t.Val.Value()] = true
 		} else if !t.IsType(lexerstate.SemicolonToken) {
-			return nil, fmt.Errorf("unexpected token %s, expected ident token or semicolon token", t.Val.Value())
+			return false, nil, fmt.Errorf("unexpected token %s, expected ident token or semicolon token", t.Val.Value())
 		}
-		t = p.tokens.PopFront()
+		t = tokens.PopFront()
 	}
 	if t == nil {
-		return nil, fmt.Errorf("unexpected EOF, expected ')'")
+		return false, nil, fmt.Errorf("unexpected EOF, expected ')'")
 	}
-	return rv, nil
+
+	rv := []string{}
+	optimizeTime := false
+	for name := range memo {
+		if name == "time" {
+			optimizeTime = true
+		} else {
+			rv = append(rv, name)
+		}
+	}
+	return optimizeTime, rv, nil
 }

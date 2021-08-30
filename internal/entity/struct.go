@@ -1,19 +1,17 @@
 package entity
 
-type Config struct {
-	Stocks    []*Stock
-	Processes []*Process
-	Optimize  []string
-}
+type Stocks map[string]int
 
-type Stock struct {
-	Key   string
-	Value int
+type Config struct {
+	Stocks       Stocks
+	Processes    []*Process
+	Goals        []string
+	OptimizeTime bool
 }
 
 type Process struct {
 	Name    string
-	Needs   []*Stock
-	Results []*Stock
+	Needs   Stocks
+	Results Stocks
 	Delay   int
 }

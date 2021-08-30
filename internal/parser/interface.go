@@ -6,7 +6,7 @@ import (
 )
 
 type Parser interface {
-	Parse(cfg *entity.Config) error
+	Parse(filepath string) (*entity.Config, error)
 }
 
 type Reader interface {
