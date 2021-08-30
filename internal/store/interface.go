@@ -9,4 +9,5 @@ type Store interface {
 	Store(name string, amount int) int
 	BatchStore(stocks entity.Stocks)
 	Value() store
+	Get(name string) int
 }

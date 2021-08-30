@@ -84,3 +84,11 @@ func (s store) BatchStore(stocks entity.Stocks) {
 func (s store) Value() store {
 	return s
 }
+
+func (s store) Get(name string) int {
+	v, ok := s[name]
+	if ok {
+		return v
+	}
+	return 0
+}
