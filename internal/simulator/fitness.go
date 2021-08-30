@@ -4,13 +4,16 @@ import (
 	"strconv"
 
 	"github.com/MonsieurTa/krpsim/internal/genetic"
+	"github.com/MonsieurTa/krpsim/internal/store"
 )
 
 type Fitness struct {
-	Individual *genetic.Individual
-	Points     float64
-	Score      float64
-	TotalDelay float64
+	Individual       *genetic.Individual
+	Store            store.Store
+	Points           float64
+	Score            float64
+	TotalDelay       float64
+	SuccessfullGenes int
 }
 
 type Fitnesses []*Fitness
