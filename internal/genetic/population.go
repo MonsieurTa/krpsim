@@ -1,11 +1,13 @@
 package genetic
 
-import "github.com/MonsieurTa/krpsim/internal/entity"
+import (
+	"math/rand"
+	"time"
 
-type Population struct {
-	Generation  int
-	Individuals []*Individual
-}
+	"github.com/MonsieurTa/krpsim/internal/entity"
+)
+
+type Population []*Individual
 
 type Config struct {
 	PopulationSize     int
@@ -13,12 +15,16 @@ type Config struct {
 	Processes          []*entity.Process
 }
 
-func NewPopulation(cfg *Config) *Population {
-	rv := Population{}
+func NewRandomPopulation(cfg *Config) Population {
+	rand.Seed(time.Now().UnixNano())
 
-	rv.Individuals = make([]*Individual, cfg.PopulationSize)
+	rv := make(Population, cfg.PopulationSize)
 	for i := 0; i < cfg.PopulationSize; i++ {
-		rv.Individuals[i] = NewRandomIndividual(cfg.GenesPerIndividual, cfg.Processes)
+		rv[i] = NewRandomIndividual(cfg.GenesPerIndividual, cfg.Processes)
 	}
-	return &rv
+	return rv
+}
+
+func (p Population) Size() int {
+	return len(p)
 }

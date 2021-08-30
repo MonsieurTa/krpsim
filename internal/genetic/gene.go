@@ -6,34 +6,22 @@ import (
 	"github.com/MonsieurTa/krpsim/internal/entity"
 )
 
-type Gene struct {
-	Process *entity.Process
-	Next    *Gene
+type Gene *entity.Process
+type Genes []Gene
+
+func NewGene(p *entity.Process) Gene {
+	return p
 }
 
-func NewGene(p *entity.Process) *Gene {
-	return &Gene{p, nil}
-}
-
-func NewRandomGene(p []*entity.Process) *Gene {
+func NewRandomGene(p []*entity.Process) Gene {
 	idx := rand.Int() % len(p)
 	return NewGene(p[idx])
 }
 
-type GeneList struct {
-	Head *Gene
-	Tail *Gene
-	Size int
+func (gs *Genes) Push(v Gene) {
+	*gs = append(*gs, v)
 }
 
-func (c *GeneList) Push(g *Gene) {
-	if c.Head == nil && c.Tail == nil {
-		c.Head = g
-		c.Tail = g
-	} else {
-		c.Tail.Next = g
-		c.Tail = g
-	}
-	c.Tail.Next = nil
-	c.Size++
+func (gs Genes) Size() int {
+	return len(gs)
 }
