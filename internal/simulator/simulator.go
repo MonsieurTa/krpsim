@@ -24,6 +24,7 @@ type SimulatorConfig struct {
 	TournamentPoolSize         int
 	TournamentSelectionPortion float64
 	ElitismRatio               float64
+	CrossoverPoints            int
 }
 
 func NewSimulator(cfg *SimulatorConfig) Simulator {
@@ -65,6 +66,7 @@ func (s *Simulator) Run() genetic.Population {
 			MutationRate:       s.cfg.MutationRate,
 			Selection:          append(selection, elites[:]...),
 			BaseMutations:      s.cfg.KrpSimConfig.Processes,
+			CrossoverPoints:    s.cfg.CrossoverPoints,
 		})
 
 		nextPopulation := operator.Breed()
@@ -92,22 +94,24 @@ func (s *Simulator) GetFitnesses() Fitnesses {
 
 func (s *Simulator) GetFitnesss(individual *genetic.Individual) *Fitness {
 	store := s.initialStore.Duplicate()
-	rv := Fitness{Individual: individual}
+	rv := Fitness{Individual: individual, Store: store}
 
 	for _, v := range individual.Genes() {
 		if store.ConsumeIfAvailable(v.Needs) {
-			rv.Points++
+			store.BatchStore(v.Results)
+
+			rv.SuccessfullGenes++
+			rv.Points = float64(rv.SuccessfullGenes)
 			rv.TotalDelay += float64(v.Delay)
 			for _, goal := range s.cfg.KrpSimConfig.Goals {
 				_, ok := v.Results[goal]
 				if ok {
-					rv.Score = rv.Points
+					rv.Points *= float64(store.Get(goal))
 					if s.cfg.KrpSimConfig.OptimizeTime && rv.TotalDelay != 0 {
-						rv.Score /= rv.TotalDelay
+						rv.Score = rv.Points / rv.TotalDelay
 					}
 				}
 			}
-			store.BatchStore(v.Results)
 		} else {
 			break
 		}

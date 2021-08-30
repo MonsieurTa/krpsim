@@ -19,6 +19,7 @@ type OperatorConfig struct {
 	MutationRate       float64
 	Selection          []*genetic.Individual
 	BaseMutations      []*entity.Process
+	CrossoverPoints    int
 }
 
 func NewGeneticOperator(cfg *OperatorConfig) *GeneticOperator {
@@ -43,27 +44,7 @@ func (o *GeneticOperator) crossover() genetic.Population {
 }
 
 func (o *GeneticOperator) breed() [2]*genetic.Individual {
-	return o.kPointCrossover(2)
-}
-
-func (o *GeneticOperator) onePointCrossover(k int) [2]*genetic.Individual {
-	father, mother := o.getRandomParents()
-
-	point := utils.RandBetween(0, o.cfg.GenesPerIndividual)
-
-	firstChild := genetic.NewIndividual(o.cfg.GenesPerIndividual)
-	secondChild := genetic.NewIndividual(o.cfg.GenesPerIndividual)
-
-	for i := 0; i < o.cfg.GenesPerIndividual; i++ {
-		if i < point {
-			firstChild.AddGene(father.Genes()[i])
-			secondChild.AddGene(mother.Genes()[i])
-		} else {
-			firstChild.AddGene(mother.Genes()[i])
-			secondChild.AddGene(father.Genes()[i])
-		}
-	}
-	return [2]*genetic.Individual{&firstChild, &secondChild}
+	return o.kPointCrossover(o.cfg.CrossoverPoints)
 }
 
 func (o *GeneticOperator) kPointCrossover(k int) [2]*genetic.Individual {
@@ -78,9 +59,9 @@ func (o *GeneticOperator) kPointCrossover(k int) [2]*genetic.Individual {
 	firstChild := genetic.NewIndividual(o.cfg.GenesPerIndividual)
 	secondChild := genetic.NewIndividual(o.cfg.GenesPerIndividual)
 
-	for i := 0; i < o.cfg.GenesPerIndividual; i++ {
-		if len(points) > 0 && i >= points[0] {
-			points = points[1:]
+	for i, j := 0, 0; i < o.cfg.GenesPerIndividual; i++ {
+		if i >= points[j] && j < len(points)-1 {
+			j++
 			// swap
 			tmp := firstChild
 			firstChild = secondChild
