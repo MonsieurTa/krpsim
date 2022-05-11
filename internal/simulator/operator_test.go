@@ -19,9 +19,15 @@ func TestIkeaGeneticOperator(t *testing.T) {
 	genesPerIndividual := 40
 
 	simulator := NewSimulator(&SimulatorConfig{
-		KrpSimConfig:       cfg,
-		PopulationSize:     populationSize,
-		GenesPerIndividual: genesPerIndividual,
+		KrpSimConfig:               cfg,
+		PopulationSize:             populationSize,
+		GenesPerIndividual:         genesPerIndividual,
+		GenerationLimit:            1000,
+		MutationRate:               0.1,
+		TournamentPoolSize:         genesPerIndividual / 4,
+		TournamentSelectionPortion: 0.25,
+		ElitismRatio:               0.1,
+		CrossoverPoints:            2,
 	})
 
 	simulator.Init()
@@ -41,11 +47,12 @@ func TestIkeaGeneticOperator(t *testing.T) {
 	}
 
 	operator := NewGeneticOperator(&OperatorConfig{
-		PopulationSize:     populationSize,
-		GenesPerIndividual: genesPerIndividual,
-		MutationRate:       0.10,
+		PopulationSize:     simulator.cfg.PopulationSize,
+		GenesPerIndividual: simulator.cfg.GenesPerIndividual,
+		MutationRate:       simulator.cfg.MutationRate,
 		Selection:          selection,
-		BaseMutations:      cfg.Processes,
+		BaseMutations:      simulator.cfg.KrpSimConfig.Processes,
+		CrossoverPoints:    simulator.cfg.CrossoverPoints,
 	})
 
 	newInds := operator.Breed()
